@@ -1,3 +1,3 @@
 # Picsart-Academy
 ### My homeworks  
-#### START: 01.06.2022
+#### START DATE: 01.06.2022 -
