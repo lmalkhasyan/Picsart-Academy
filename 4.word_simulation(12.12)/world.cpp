@@ -1,15 +1,17 @@
-#include "word.h"
+#include "world.h"
 
 #include <cstdlib>
 #include <iostream>
 
-void Word::start()
+void World::start()
 {
+	const int max_time = 24;
+	const int last_day_hour = 12;
 	while(1)
 	{
-		if(time > 24)
+		if(time > max_time)
 			time = 1;
-		if(time <= 12)
+		if(time <= last_day_hour)
 		{
 			std::cout << "Now Day [" << time << ":00] ";
 			s.light();

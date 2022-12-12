@@ -10,6 +10,7 @@ class Frog
 	private:
 		int stomach;
 		static const  int start_stomach = 5;
+		static const  int max_stamoch = 100;
 	public:
 		Frog()
 		:stomach(start_stomach){}
@@ -19,7 +20,7 @@ class Frog
 		}
 		void eat(Grass & obj) 
 		{
-			if(stomach >= 100)
+			if(stomach >= max_stamoch)
 				return ;
 			stomach += 5;
 			std::cout << "Frog is eating stomach level = " << stomach << std::endl;

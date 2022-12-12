@@ -6,7 +6,7 @@
 #include "sun.h"
 #include "tree.h"
 
-class Word
+class World
 {
 	private:
 	Sun s;
@@ -14,9 +14,10 @@ class Word
 	Tree t;
 	Grass g;
 	int time;
+	static const int start_time = 1;
 	public:
-		Word()
-		:time(1){}
+		World()
+		:time(start_time){}
 		void start();
 };
 			

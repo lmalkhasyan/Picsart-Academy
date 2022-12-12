@@ -1,7 +1,7 @@
-#include "word.h"
+#include "world.h"
 
 int main()
 {
-	Word new_word;
+	World new_word;
 	new_word.start();
 }
