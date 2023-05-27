@@ -32,79 +32,14 @@ private:
     key_compare value_compare;
     size_type size;
 
-    bool search_help(node_pointer root, const_reference target)
-    {
-        if(!root)
-            return false;
-        if(!value_compare(root->data, target) && !value_compare(target, root->data))
-            return true;
-        if(value_compare(root->data,target))
-            return search_help(root->right, target);
-        return search_help(root->left, target);
-    }
-
-    value_type getMin_help(node_pointer root) // undifined in empty tree;
-    {
-        if(root->left == nullptr)
-        {
-            return root->data;
-        }
-        return getMin_help(root->left);
-    }
-
-    value_type getMax_help(node_pointer root) // undifined in empty tree;
-    {
-        if(root->right == nullptr)
-        {
-            return root->data;
-        }
-        return getMax_help(root->right);
-    }
-
-    node_pointer clone_help(node_pointer root)
-    {
-        if (!root)
-            return nullptr;
-        return new TreeNode(root->val, clone_help(root->left), clone_help(root->right));
-
-    }
-
-    void destruct_tree(node_pointer root)
-    {
-        if(!root)
-            return;
-        destruct_tree(root->left);
-        destruct_tree(root->right);
-        delete(root);
-        root = nullptr;
-        size = 0;
-
-    }
-
-    node_pointer getSuccessor()
-    {
-        // todo
-    }
-
-    node_pointer getPredecessor()
-    {
-        // todo
-    }
-
-    size_type getHeight_help(node_pointer root)
-    {
-        if(!root)
-            return -1;
-        return 1 + std::max(getHeight_help(root->left), getHeight_help(root->right));
-    }
-
 public:
     BST()
     :root{nullptr}, value_compare{}, size{} {}
 
     BST(const BST<T>& rhs) : root{nullptr}, size{0}
     {
-        this->root = clone_help(rhs.root);
+        node_pointer temp = clone_help(rhs.root); 
+        this->root = temp;
         this->size = rhs.size;
     }
 
@@ -126,28 +61,24 @@ public:
     {
         if(this != &rhs) 
         {
-            node_pointer temp = clone_help(rhs.root);
-            destruct_tree(this.root);
-            root = temp;
-            size = rhs.size;
+            BST tmp(rhs);
+            swap(*this, tmp);
         }
         return *this;
     }
     BST& operator=(BST<T>&& rhs)
     {
-        if (this != &tree) 
+        if(this != &rhs)
         {
-            root = rhs.root;
-            size = rhs.size;
-            rhs.root = nullptr;
-            rhs.size = 0;
+            BST tmp(std::move(rhs));
+            swap(*this, tmp);
         }
         return *this;
     }
 
-    bool search(const_reference target)
+    bool find(const_reference target)
     {
-        return search_help(root, target);
+        return find_help(root, target);
     }
 
     bool search_iterative(const_reference target)
@@ -235,7 +166,10 @@ public:
 
     void swap(BST &other)
     {
-        // todo;
+        using std::swap;
+        
+        swap(this->root, other.root);
+        swap(this->size, other.size);
     }
 
     bool contains(value_type &key)
@@ -248,11 +182,86 @@ public:
         //todo
     }
 
-    bool find(value_type &key)
+private: // helpers
+    bool find_help(node_pointer root, const_reference target)
+    {
+        if(!root)
+            return false;
+        if(value_compare(root->data,target))
+        {
+            return search_help(root->right, target);
+        }
+        else if(value_compare(target, root->data))
+        {
+            return search_help(root->left, target);
+        }
+        else 
+            return true;
+    }
+
+    value_type getMin_help(node_pointer root) // undifined in empty tree;
+    {
+        if(root->left == nullptr)
+        {
+            return root->data;
+        }
+        return getMin_help(root->left);
+    }
+
+    value_type getMax_help(node_pointer root) // undifined in empty tree;
+    {
+        if(root->right == nullptr)
+        {
+            return root->data;
+        }
+        return getMax_help(root->right);
+    }
+
+    node_pointer clone_help(node_pointer root)
+    {
+        if (!root)
+            return nullptr;
+        return new TreeNode(root->val, clone_help(root->left), clone_help(root->right));
+
+    }
+
+    void destruct_tree(node_pointer root)
+    {
+        if(!root)
+            return;
+        destruct_tree(root->left);
+        destruct_tree(root->right);
+        delete(root);
+        root = nullptr;
+        size = 0;
+
+    }
+
+    node_pointer getSuccessor()
     {
         // todo
     }
+
+    node_pointer getPredecessor()
+    {
+        // todo
+    }
+
+    size_type getHeight_help(node_pointer root)
+    {
+        if(!root)
+            return -1;
+        return 1 + std::max(getHeight_help(root->left), getHeight_help(root->right));
+    }
 };
+
+
+
+template<class T, class Compare>
+void swap( BST<T, Compare>& lhs, BST<T, Compare>& rhs )
+{
+    lhs.swap(rhs);
+}
 
 
 #endif
