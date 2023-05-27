@@ -43,9 +43,25 @@ class Gtree
         {
             return new Gtree_node(val);
         }
-
+        void DestroyRecursive(node_pointer node)
+        {
+            if (node)
+            {
+                for(auto it : node->children)
+                {
+                    DestroyRecursive(it);
+                }
+                delete node;
+            }
+        }
     public:
+
         Gtree() = default;
+
+        ~Gtree()
+        {
+            DestroyRecursive(root);
+        }
         node_pointer get_root()
         {
             return root;
