@@ -1,5 +1,41 @@
 #include "BST.h"
 #include <cassert>
+#include <iostream>
+#include <string>
+
+void test_serialize() 
+{
+    // Create a BST and insert some values
+    BST<int> bst;
+    bst.insert(50);
+    bst.insert(30);
+    bst.insert(70);
+    bst.insert(20);
+    bst.insert(40);
+    bst.insert(60);
+    bst.insert(80);
+
+    // Test serialization and deserialization
+    std::string serialized = bst.serialize();
+
+    BST<int> deserialized;
+    deserialized.deserialize(serialized);
+
+    // Verify the deserialized BST has the same values
+    assert(deserialized.find(50));
+    assert(deserialized.find(30));
+    assert(deserialized.find(70));
+    assert(deserialized.find(20));
+    assert(deserialized.find(40));
+    assert(deserialized.find(60));
+    assert(deserialized.find(80));
+
+    // Verify the deserialized BST has the correct size
+    assert(deserialized.size() == bst.size());
+
+    std::cout << "Serialization and Deserialization test passed." << std::endl;
+}
+
 
 void testBST()
 {
@@ -146,5 +182,7 @@ int main()
     std::cout << std::endl;
 
     testBST();
+
+    test_serialize();
     return 0;
 }

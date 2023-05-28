@@ -3,6 +3,8 @@
 #include <functional>
 #include <stdexcept>
 #include <iostream>
+#include <string>
+#include <cstring>
 
 template <typename T, typename Compare=std::less<T>>
 class BST
@@ -173,6 +175,24 @@ public:
     {
         postorder_help(root);
     }
+
+    std::string serialize() 
+    {
+        std::string result;
+        preorder_serialize(root, result);
+        return result;
+    }
+
+    void deserialize(const std::string &data) 
+    {
+        for (size_t i = 0; i < data.size(); i += sizeof(int)) 
+        {
+            value_type val;
+            memcpy(&val, &data[i], sizeof(value_type));
+            this->insert(val);
+        }
+    }
+
 
 private: // helpers
     bool find_help(node_pointer root, const_reference target) const
@@ -407,6 +427,20 @@ private: // helpers
         std::cout << root->data << " ";
 
     }
+    
+    void preorder_serialize(node_pointer root, std::string &result)    
+    {
+        if(!root)
+            return ;
+        char *ptr = (char *)&root->data;
+        for(int i = 0; i < sizeof(value_type); ++i)
+        {
+            result.push_back(*(ptr + i));
+        }
+        preorder_serialize(root->left, result);
+        preorder_serialize(root->right, result);
+
+    }   
 };
 
 template<class T, class Compare>
@@ -414,6 +448,8 @@ void swap(BST<T, Compare>& lhs, BST<T, Compare>& rhs) noexcept
 {
     lhs.swap(rhs);
 }
+
+
 
 
 #endif
