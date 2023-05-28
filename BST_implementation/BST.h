@@ -1,16 +1,19 @@
 #ifndef BST_H
 #define BST_H
 #include <functional>
+#include <stdexcept>
+#include <iostream>
 
 template <typename T, typename Compare=std::less<T>>
 class BST
 {
 public:
     using value_type = T;
-    using referance_type = value_type&;
+    using reference_type = value_type&;
     using const_reference = const value_type&;
     using key_compare = Compare;
-    using size_type = size_t;
+    using size_type = std::size_t;
+
 private:
     struct BST_node
     {
@@ -20,7 +23,7 @@ private:
         node_pointer left;
         node_pointer right;
         BST_node(value_type t = value_type(), node_pointer l = nullptr, node_pointer r = nullptr) 
-        : data{t}, left{f}, right{r} {}
+        : data{t}, left{l}, right{r} {}
     };
 
 public:
@@ -30,31 +33,30 @@ public:
 private:
     node_type *root;
     key_compare value_compare;
-    size_type size;
+    size_type node_count;
 
 public:
-    BST()
-    :root{nullptr}, value_compare{}, size{} {}
+    BST() :root{nullptr}, value_compare{}, node_count{0} {}
 
-    BST(const BST<T>& rhs) : root{nullptr}, size{0}
+    BST(const BST<T>& rhs) : root{nullptr}, node_count{0}
     {
         node_pointer temp = clone_help(rhs.root); 
         this->root = temp;
-        this->size = rhs.size;
+        this->node_count = rhs.node_count;
     }
 
-    BST(BST<T>&& rhs) : root{nullptr}, size{}
+    BST(BST<T>&& rhs) : root{nullptr}, node_count{0}
     {
         this->root = rhs.root;
-        this->size = rhs.size;
+        this->node_count = rhs.node_count;
         rhs.root = nullptr;
-        rhs.size = 0;
+        rhs.node_count = 0;
     }
     ~BST()
     {
         destruct_tree(root);
         this->root = nullptr;
-        this->size = 0;
+        this->node_count = 0;
     }
 
     BST& operator=(const BST<T>& rhs)
@@ -62,26 +64,27 @@ public:
         if(this != &rhs) 
         {
             BST tmp(rhs);
-            swap(*this, tmp);
+            this->swap(tmp);
         }
         return *this;
     }
+  
     BST& operator=(BST<T>&& rhs)
     {
         if(this != &rhs)
         {
             BST tmp(std::move(rhs));
-            swap(*this, tmp);
+            this->swap(tmp);
         }
         return *this;
     }
 
-    bool find(const_reference target)
+    bool find(const_reference target) const
     {
         return find_help(root, target);
     }
 
-    bool search_iterative(const_reference target)
+    bool search_iterative(const_reference target) const
     {
         if(!root)
             return false;
@@ -102,126 +105,143 @@ public:
         return false;
     }
 
-    value_type getMin() // undefined if empty tree
+    bool empty() const noexcept
     {
-        return getMin_help(root)
+        return !(this->root);
     }
 
-    value_type getMin_iterative() // undefined if empty tree
+    size_type getHeight() const
     {
-        node_pointer temp = root;
-        while(temp->left)
-        {
-            temp = temp->left;
-        }
-        return temp->data;
-    }
-
-    value_type getMax() // undefined if empty tree
-    {
-        return getMax_help(root)
-    }
-
-    value_type getMax_iterative() // undefined if empty tree
-    {
-        node_pointer temp = root;
-        while(temp->right)
-        {
-            temp = temp->right;
-        }
-        return temp->data;
-    }
-
-    bool empty()
-    {
-        return this->root;
-    }
-
-    size_type getHeight()
-    {
-        return getHeight_help(root)
+        return getHeight_help(root);
     }
 
     void clear()
     {
         destruct_tree(root);
         root = nullptr;
-        size = 0;
+        node_count = 0;
     }
 
-    size_type size()
+    size_type size() const noexcept
     {
-        return this->size;
+        return this->node_count;
     }
 
-    bool insert(const value_type &data)
+    bool insert(const_reference data)
     {
-        // todo;
+        try
+        {
+            root = insert_help(root, data);
+            ++node_count;
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
     }
 
-    bool erase(const value_type &data)
+    void erase(const_reference data)
     {
-        // todo;
+        root = erase_help(root, data);
     }
 
-    void swap(BST &other)
+    void swap(BST &other) noexcept
     {
         using std::swap;
         
         swap(this->root, other.root);
-        swap(this->size, other.size);
+        swap(this->node_count, other.node_count);
     }
 
-    bool contains(value_type &key)
+    bool contains(const_reference key) const
     {
-        // todo
+        return find_help(root, key);
     }
 
-    size_type count()
+    void preorder()
     {
-        //todo
+        preorder_help(root);
+    }
+
+    void inorder()
+    {
+        inorder_help(root);
+    }
+
+    void postorder()
+    {
+        postorder_help(root);
     }
 
 private: // helpers
-    bool find_help(node_pointer root, const_reference target)
+    bool find_help(node_pointer root, const_reference target) const
     {
         if(!root)
             return false;
         if(value_compare(root->data,target))
         {
-            return search_help(root->right, target);
+            return find_help(root->right, target);
         }
         else if(value_compare(target, root->data))
         {
-            return search_help(root->left, target);
+            return find_help(root->left, target);
         }
         else 
             return true;
     }
 
-    value_type getMin_help(node_pointer root) // undifined in empty tree;
+    node_pointer getMin_help(node_pointer root) const
     {
+        if(!root)
+            return nullptr;
         if(root->left == nullptr)
         {
-            return root->data;
+            return root;
         }
         return getMin_help(root->left);
     }
 
-    value_type getMax_help(node_pointer root) // undifined in empty tree;
+    node_pointer getMax_help(node_pointer root) const
     {
+        if(!root)
+            return nullptr;
         if(root->right == nullptr)
         {
-            return root->data;
+            return root;
         }
         return getMax_help(root->right);
     }
 
-    node_pointer clone_help(node_pointer root)
+    node_pointer getMin_iterative() const 
+    {
+        if(!root)
+            return nullptr;
+        node_pointer temp = root;
+        while(temp->left)
+        {
+            temp = temp->left;
+        }
+        return temp;
+    }
+
+    node_pointer getMax_iterative() const
+    {
+        if(!root)
+            return nullptr;
+        node_pointer temp = root;
+        while(temp->right)
+        {
+            temp = temp->right;
+        }
+        return temp;
+    }
+
+    node_pointer clone_help(node_pointer root) const
     {
         if (!root)
             return nullptr;
-        return new TreeNode(root->val, clone_help(root->left), clone_help(root->right));
+        return new node_type(root->data, clone_help(root->left), clone_help(root->right));
 
     }
 
@@ -233,32 +253,164 @@ private: // helpers
         destruct_tree(root->right);
         delete(root);
         root = nullptr;
-        size = 0;
-
     }
 
-    node_pointer getSuccessor()
-    {
-        // todo
-    }
-
-    node_pointer getPredecessor()
-    {
-        // todo
-    }
-
-    size_type getHeight_help(node_pointer root)
+    node_pointer getSuccessor(node_pointer root, node_pointer target) const
     {
         if(!root)
-            return -1;
+            return nullptr;
+        if(target->right != nullptr)
+            return getMin_help(target->right);
+
+        node_pointer succ = nullptr;
+        node_pointer curr = root;
+        while(curr != nullptr)
+        {
+            if(value_compare(target->data, curr->data))
+            {
+                succ = curr;
+                curr = curr->left;
+            }
+            else if(value_compare(curr->data, target->data))
+            {
+                curr = curr->right;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return succ;
+    }
+
+    node_pointer getPredecessor(node_pointer root, node_pointer target) const
+    {
+        if(!root)
+            return nullptr;
+        if(target->left != nullptr)
+            return getMax_help(target->left);
+
+        node_pointer pred = nullptr;
+        node_pointer curr = root;
+        while(curr != nullptr)
+        {
+            if(value_compare(target->data, curr->data))
+            {
+                curr = curr->left;
+            }
+            else if(value_compare(curr->data, target->data))
+            {
+                pred = curr;
+                curr = curr->right;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return pred;
+    }
+
+    size_type getHeight_help(node_pointer root) const
+    {
+        if(!root)
+            return 0;
         return 1 + std::max(getHeight_help(root->left), getHeight_help(root->right));
+    }
+
+    node_pointer insert_help(node_pointer root, const_reference data)
+    {
+        if(!root)
+            return new node_type(data);
+        if(value_compare(root->data, data))
+        {
+            root->right = insert_help(root->right, data);
+        }
+        else if (value_compare(data, root->data))
+        {
+            root->left = insert_help(root->left, data);
+        }
+        else
+        {
+            throw std::runtime_error("Duplicate value"); 
+        }
+        return root;
+    }
+
+    node_pointer erase_help(node_pointer root, const_reference data)
+    {
+        if(!root)
+            return nullptr;
+        
+        if(value_compare(root->data, data))
+        {
+            root->right = erase_help(root->right, data);
+        }
+        else if(value_compare(data, root->data))
+        {
+            root->left = erase_help(root->left, data);
+        }
+        else
+        {
+            if(!root->left && !root->right)
+            {
+                delete root;
+                --node_count;
+                return nullptr;
+            }
+            else if(root->left == nullptr)
+            {
+                node_pointer temp = root->right;
+                --node_count;
+                delete root;
+                return temp;
+            }
+            else if(root->right == nullptr)
+            {
+                node_pointer temp = root->left;
+                delete root;
+                --node_count;
+                return temp;
+            }
+            node_pointer successor = getMin_help(root->right);
+            root->data = successor->data;
+            root->right = erase_help(root->right, successor->data);
+        }
+        return root;
+    }
+
+    void preorder_help(node_pointer root)
+    {
+        if(!root)
+            return;
+        std::cout << root->data << " ";
+        preorder_help(root->left);
+        preorder_help(root->right);
+    }
+
+    void inorder_help(node_pointer root)
+    {
+        if(!root)
+            return;
+        inorder_help(root->left);
+        std::cout << root->data << " ";
+        inorder_help(root->right);
+
+    }
+
+    void postorder_help(node_pointer root)
+    {
+        if(!root)
+            return;
+        postorder_help(root->left);
+        postorder_help(root->right);
+        std::cout << root->data << " ";
+
     }
 };
 
-
-
 template<class T, class Compare>
-void swap( BST<T, Compare>& lhs, BST<T, Compare>& rhs )
+void swap(BST<T, Compare>& lhs, BST<T, Compare>& rhs) noexcept
 {
     lhs.swap(rhs);
 }
